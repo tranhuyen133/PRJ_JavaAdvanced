@@ -1,0 +1,69 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: gymflow
+  datasource:
+    # Docker Compose truyền SPRING_DATASOURCE_URL/USERNAME/PASSWORD (giống repo nhóm); giá trị dưới cho chạy local
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3307/gymflow?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=Asia/Ho_Chi_Minh}
+    username: ${SPRING_DATASOURCE_USERNAME:gymflow}
+    password: ${SPRING_DATASOURCE_PASSWORD:gymflow_dev_password}
+    hikari:
+      # InnoDB mặc định REPEATABLE READ: sau khi chờ khoá dòng, câu kiểm tra trùng vẫn đọc ảnh chụp cũ.
+      # READ COMMITTED (như PostgreSQL) để mỗi câu lệnh thấy dữ liệu vừa commit.
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none          # Lược đồ do Flyway quản lý (db/migration)
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Ho_Chi_Minh
+        default_batch_fetch_size: 50
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-please-use-at-least-32-characters-long}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:720}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8081}
+  seed-demo-data: ${SEED_DEMO_DATA:true}
+  demo:
+    # Hiện nút đăng nhập nhanh bằng tài khoản demo (chỉ các tài khoản thật sự tồn tại). Tắt khi triển khai thật.
+    quick-login: ${DEMO_QUICK_LOGIN:true}
+  registration:
+    enabled: ${REGISTRATION_ENABLED:true}
+  # Giới hạn đăng nhập / đăng ký / quên mật khẩu theo IP. Chỉ tắt khi chạy kiểm thử tải.
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+  reset:
+    expose-token: ${RESET_EXPOSE_TOKEN:true}
+    valid-minutes: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.gymflow: INFO
